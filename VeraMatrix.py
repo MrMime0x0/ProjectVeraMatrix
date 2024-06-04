@@ -3,6 +3,7 @@ import random
 import sqlite3
 import time
 from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
 
 # Ensure MatrixSim directory exists
 base_dir = "MatrixSim"
@@ -254,6 +255,7 @@ class Universe:
         self.start_date = self.current_time
         self.population = 0
         self.technologies = []
+        self.population_over_time = []  # Track population changes over time
 
     def add_planet(self, planet):
         self.planets.append(planet)
@@ -274,6 +276,14 @@ class Universe:
             if tech.discovery_date is None and random.random() < 0.0001:
                 tech.discover(self.current_time.strftime('%Y-%m-%d'))
 
+    def simulate_population_growth(self):
+        if random.random() < 0.01:  # 1% daily chance of new NPC being born or immigrating
+            name = random_name()
+            age = random.randint(0, 30)  # Age 0 for newborns, up to 30 for immigrants
+            _, country, state = random_location(self.planets)
+            self.add_npc(NPC(name, age, country, state))
+            print(f"New NPC added: {name}, Age: {age}, Country: {country}, State: {state}")
+
     def run_simulation(self, days_to_simulate):
         end_time = self.current_time + timedelta(days=days_to_simulate)
         while self.current_time < end_time:
@@ -282,7 +292,9 @@ class Universe:
                 npc.live_day()
                 if not npc.alive:
                     self.remove_npc(npc)
+            self.simulate_population_growth()
             self.check_technology_discovery()
+            self.population_over_time.append((self.current_time, self.population))  # Record population data
             self.print_status()
             time.sleep(0.1)  # Sleep for 0.1 seconds to simulate real time passage (adjust or remove for faster runs)
 
@@ -301,6 +313,16 @@ class Universe:
         for tech in self.technologies:
             status = f"Discovered on {tech.discovery_date}" if tech.discovery_date else "Not yet discovered"
             print(f"  {tech.name}: {status}")
+
+    def plot_population(self):
+        dates, populations = zip(*self.population_over_time)
+        plt.figure(figsize=(10, 5))
+        plt.plot(dates, populations, marker='o')
+        plt.xlabel('Date')
+        plt.ylabel('Population')
+        plt.title('Population Over Time')
+        plt.grid(True)
+        plt.show()
 
 def random_name():
     first_names = ["Alice", "Bob", "Charlie", "David", "Eve", "Faythe", "Grace", "Heidi", "Ivan", "Judy"]
@@ -359,3 +381,6 @@ days_to_simulate = random.randint(1, 10) * 365
 print("Starting simulation...")
 universe.run_simulation(days_to_simulate)
 print("Simulation finished.")
+
+# Plot the population changes
+universe.plot_population()
