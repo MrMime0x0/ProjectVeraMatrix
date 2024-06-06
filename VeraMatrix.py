@@ -256,6 +256,7 @@ class Universe:
         self.population = 0
         self.technologies = []
         self.population_over_time = []  # Track population changes over time
+        self.birth_rates = []  # Track birth rates over time
 
     def add_planet(self, planet):
         self.planets.append(planet)
@@ -277,12 +278,15 @@ class Universe:
                 tech.discover(self.current_time.strftime('%Y-%m-%d'))
 
     def simulate_population_growth(self):
+        daily_births = 0
         if random.random() < 0.01:  # 1% daily chance of new NPC being born or immigrating
             name = random_name()
             age = random.randint(0, 30)  # Age 0 for newborns, up to 30 for immigrants
             _, country, state = random_location(self.planets)
             self.add_npc(NPC(name, age, country, state))
+            daily_births += 1
             print(f"New NPC added: {name}, Age: {age}, Country: {country}, State: {state}")
+        self.birth_rates.append((self.current_time, daily_births))  # Record birth rate data
 
     def run_simulation(self, days_to_simulate):
         end_time = self.current_time + timedelta(days=days_to_simulate)
@@ -321,6 +325,16 @@ class Universe:
         plt.xlabel('Date')
         plt.ylabel('Population')
         plt.title('Population Over Time')
+        plt.grid(True)
+        plt.show()
+
+    def plot_birth_rates(self):
+        dates, birth_rates = zip(*self.birth_rates)
+        plt.figure(figsize=(10, 5))
+        plt.plot(dates, birth_rates, marker='o', color='orange')
+        plt.xlabel('Date')
+        plt.ylabel('Birth Rate')
+        plt.title('Daily Birth Rates Over Time')
         plt.grid(True)
         plt.show()
 
@@ -384,3 +398,6 @@ print("Simulation finished.")
 
 # Plot the population changes
 universe.plot_population()
+
+# Plot the birth rates
+universe.plot_birth_rates()
