@@ -31,6 +31,26 @@ def create_directories():
 
 create_directories()
 
+# Create the BirthRateData directory
+birth_rate_dir = os.path.join(base_dir, "BirthRateData")
+os.makedirs(birth_rate_dir, exist_ok=True)
+
+# Create or connect to the birth rate database
+birth_rate_db = os.path.join(birth_rate_dir, "birth_rate_log.sqlite")
+conn = sqlite3.connect(birth_rate_db)
+cursor = conn.cursor()
+
+# Create the BirthRate table
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS BirthRate (
+        year INTEGER,
+        population INTEGER,
+        births INTEGER
+    )
+''')
+conn.commit()
+conn.close()
+
 class NPC:
     def __init__(self, name, age, country, state):
         self.name = name
@@ -256,7 +276,7 @@ class Universe:
         self.population = 0
         self.technologies = []
         self.population_over_time = []  # Track population changes over time
-        self.birth_rates = []  # Track birth rates over time
+        self.births_today = 0
 
     def add_planet(self, planet):
         self.planets.append(planet)
@@ -278,20 +298,28 @@ class Universe:
                 tech.discover(self.current_time.strftime('%Y-%m-%d'))
 
     def simulate_population_growth(self):
-        daily_births = 0
         if random.random() < 0.01:  # 1% daily chance of new NPC being born or immigrating
             name = random_name()
             age = random.randint(0, 30)  # Age 0 for newborns, up to 30 for immigrants
             _, country, state = random_location(self.planets)
             self.add_npc(NPC(name, age, country, state))
-            daily_births += 1
+            self.births_today += 1
             print(f"New NPC added: {name}, Age: {age}, Country: {country}, State: {state}")
-        self.birth_rates.append((self.current_time, daily_births))  # Record birth rate data
+
+    def log_birth_rate(self):
+        year = self.current_time.year
+        conn = sqlite3.connect(birth_rate_db)
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO BirthRate (year, population, births) VALUES (?, ?, ?)',
+                       (year, self.population, self.births_today))
+        conn.commit()
+        conn.close()
 
     def run_simulation(self, days_to_simulate):
         end_time = self.current_time + timedelta(days=days_to_simulate)
         while self.current_time < end_time:
             self.current_time += timedelta(days=1)
+            self.births_today = 0
             for npc in self.npcs:
                 npc.live_day()
                 if not npc.alive:
@@ -299,6 +327,7 @@ class Universe:
             self.simulate_population_growth()
             self.check_technology_discovery()
             self.population_over_time.append((self.current_time, self.population))  # Record population data
+            self.log_birth_rate()  # Log the birth rate for the day
             self.print_status()
             time.sleep(0.1)  # Sleep for 0.1 seconds to simulate real time passage (adjust or remove for faster runs)
 
@@ -325,16 +354,6 @@ class Universe:
         plt.xlabel('Date')
         plt.ylabel('Population')
         plt.title('Population Over Time')
-        plt.grid(True)
-        plt.show()
-
-    def plot_birth_rates(self):
-        dates, birth_rates = zip(*self.birth_rates)
-        plt.figure(figsize=(10, 5))
-        plt.plot(dates, birth_rates, marker='o', color='orange')
-        plt.xlabel('Date')
-        plt.ylabel('Birth Rate')
-        plt.title('Daily Birth Rates Over Time')
         plt.grid(True)
         plt.show()
 
@@ -398,6 +417,3 @@ print("Simulation finished.")
 
 # Plot the population changes
 universe.plot_population()
-
-# Plot the birth rates
-universe.plot_birth_rates()
