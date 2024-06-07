@@ -33,6 +33,8 @@ def create_directories():
     death_rate_dir = os.path.join(base_dir, "DeathRate")
     os.makedirs(death_rate_dir, exist_ok=True)
 
+    birth_rate_db = os.path.join(base_dir, "BirthRateData")
+    os.makedirs(birth_rate_db, exist_ok=True)
 create_directories()
 
 # Create or connect to the birth rate database
