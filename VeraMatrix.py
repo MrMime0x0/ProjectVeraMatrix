@@ -29,14 +29,14 @@ def create_directories():
     os.makedirs(os.path.join(russia_dir, "MoscowData"), exist_ok=True)
     os.makedirs(os.path.join(russia_dir, "SaintPetersburgData"), exist_ok=True)
 
+    # Ensure DeathRate directory exists
+    death_rate_dir = os.path.join(base_dir, "DeathRate")
+    os.makedirs(death_rate_dir, exist_ok=True)
+
 create_directories()
 
-# Create the BirthRateData directory
-birth_rate_dir = os.path.join(base_dir, "BirthRateData")
-os.makedirs(birth_rate_dir, exist_ok=True)
-
 # Create or connect to the birth rate database
-birth_rate_db = os.path.join(birth_rate_dir, "birth_rate_log.sqlite")
+birth_rate_db = os.path.join(base_dir, "BirthRateData", "birth_rate_log.sqlite")
 conn = sqlite3.connect(birth_rate_db)
 cursor = conn.cursor()
 
@@ -50,6 +50,23 @@ cursor.execute('''
 ''')
 conn.commit()
 conn.close()
+
+# Setup DeathRate database
+def setup_death_rate_db():
+    death_rate_db = os.path.join(base_dir, "DeathRate", "DeathRateLog.sqlite")
+    conn = sqlite3.connect(death_rate_db)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS DeathRate (
+            year INTEGER,
+            population INTEGER,
+            deaths INTEGER
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+setup_death_rate_db()
 
 class NPC:
     def __init__(self, name, age, country, state):
@@ -132,6 +149,14 @@ class NPC:
         conn.commit()
         conn.close()
 
+    def log_death(self):
+        conn = sqlite3.connect(self.db)
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO LifeEvents (date, event, consequences, choice_quality) VALUES (?, ?, ?, ?)',
+                       (datetime.now().strftime('%Y-%m-%d'), "Died", "", "Neutral"))
+        conn.commit()
+        conn.close()
+
     def update_finances(self):
         conn = sqlite3.connect(self.db)
         cursor = conn.cursor()
@@ -185,7 +210,7 @@ class NPC:
 
             if random.random() < 0.0001:  # Very small chance of dying each day
                 self.alive = False
-                self.log_event("Died")
+                self.log_death()
                 print(f"{self.name} has died at the age of {self.age:.2f}")
 
             # Random daily events
@@ -277,6 +302,7 @@ class Universe:
         self.technologies = []
         self.population_over_time = []  # Track population changes over time
         self.births_today = 0
+        self.deaths_today = 0
 
     def add_planet(self, planet):
         self.planets.append(planet)
@@ -315,19 +341,31 @@ class Universe:
         conn.commit()
         conn.close()
 
+    def log_death_rate(self):
+        year = self.current_time.year
+        conn = sqlite3.connect(os.path.join(base_dir, "DeathRate", "DeathRateLog.sqlite"))
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO DeathRate (year, population, deaths) VALUES (?, ?, ?)',
+                       (year, self.population, self.deaths_today))
+        conn.commit()
+        conn.close()
+
     def run_simulation(self, days_to_simulate):
         end_time = self.current_time + timedelta(days=days_to_simulate)
         while self.current_time < end_time:
             self.current_time += timedelta(days=1)
             self.births_today = 0
+            self.deaths_today = 0
             for npc in self.npcs:
                 npc.live_day()
                 if not npc.alive:
                     self.remove_npc(npc)
+                    self.deaths_today += 1  # Increment deaths count
             self.simulate_population_growth()
             self.check_technology_discovery()
             self.population_over_time.append((self.current_time, self.population))  # Record population data
             self.log_birth_rate()  # Log the birth rate for the day
+            self.log_death_rate()  # Log the death rate for the day
             self.print_status()
             time.sleep(0.1)  # Sleep for 0.1 seconds to simulate real time passage (adjust or remove for faster runs)
 
@@ -354,6 +392,23 @@ class Universe:
         plt.xlabel('Date')
         plt.ylabel('Population')
         plt.title('Population Over Time')
+        plt.grid(True)
+        plt.show()
+
+    def plot_death_rate(self):
+        death_rate_db = os.path.join(base_dir, "DeathRate", "DeathRateLog.sqlite")
+        conn = sqlite3.connect(death_rate_db)
+        cursor = conn.cursor()
+        cursor.execute('SELECT year, deaths FROM DeathRate')
+        data = cursor.fetchall()
+        conn.close()
+        
+        years, deaths = zip(*data)
+        plt.figure(figsize=(10, 5))
+        plt.plot(years, deaths, marker='o', color='r')
+        plt.xlabel('Year')
+        plt.ylabel('Deaths')
+        plt.title('Death Rate Over Time')
         plt.grid(True)
         plt.show()
 
@@ -417,3 +472,5 @@ print("Simulation finished.")
 
 # Plot the population changes
 universe.plot_population()
+# Plot the death rate changes
+universe.plot_death_rate()
