@@ -33,8 +33,6 @@ def create_directories():
     death_rate_dir = os.path.join(base_dir, "DeathRate")
     os.makedirs(death_rate_dir, exist_ok=True)
 
-    birth_rate_db = os.path.join(base_dir, "BirthRateData")
-    os.makedirs(birth_rate_db, exist_ok=True)
 create_directories()
 
 # Create or connect to the birth rate database
@@ -76,7 +74,11 @@ class NPC:
         self.age = age
         self.alive = True
         self.money = 1000  # Start with some money
+        self.health = random.uniform(50, 100)  # Health between 50 and 100
+        self.intelligence = random.uniform(80, 120)  # IQ between 80 and 120
+        self.skills = {'work': random.uniform(0, 100), 'social': random.uniform(0, 100), 'survival': random.uniform(0, 100)}  # Skills
         self.personality = self.generate_personality()
+        self.mood = "Neutral"
         self.family = []
         self.country = country
         self.state = state
@@ -133,11 +135,17 @@ class NPC:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS Status (
                 date TEXT,
+                health REAL,
+                intelligence REAL,
+                work_skill REAL,
+                social_skill REAL,
+                survival_skill REAL,
                 stress_level REAL,
                 thoughts TEXT,
                 location TEXT,
                 time_of_day TEXT,
-                self_awareness INTEGER
+                self_awareness INTEGER,
+                mood TEXT
             )
         ''')
         conn.commit()
@@ -170,8 +178,10 @@ class NPC:
     def update_status(self, location, time_of_day):
         conn = sqlite3.connect(self.db)
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO Status (date, stress_level, thoughts, location, time_of_day, self_awareness) VALUES (?, ?, ?, ?, ?, ?)',
-                       (datetime.now().strftime('%Y-%m-%d'), self.stress_level, self.thoughts, location, time_of_day, int(self.self_awareness)))
+        cursor.execute('''
+            INSERT INTO Status (date, health, intelligence, work_skill, social_skill, survival_skill, stress_level, thoughts, location, time_of_day, self_awareness, mood)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (datetime.now().strftime('%Y-%m-%d'), self.health, self.intelligence, self.skills['work'], self.skills['social'], self.skills['survival'], self.stress_level, self.thoughts, location, time_of_day, int(self.self_awareness), self.mood))
         conn.commit()
         conn.close()
 
@@ -205,6 +215,9 @@ class NPC:
             self.money += random.uniform(-10, 10)  # Random daily money change
             self.stress_level += random.uniform(-5, 5)  # Random daily stress change
             self.stress_level = max(0, min(self.stress_level, 100))  # Keep stress level within 0-100
+            
+            # Health degradation with age
+            self.health -= 0.01  # Small daily health decrease
             self.check_self_awareness()  # Check for self-awareness
             self.thoughts = self.generate_thoughts()  # Update thoughts
             self.update_finances()
@@ -217,7 +230,7 @@ class NPC:
 
             # Random daily events
             if random.random() < 0.05:
-                event = random.choice(["Found money", "Lost money", "Got a job", "Lost a job", "Met someone", "Traveled"])
+                event = random.choice(["Found money", "Lost money", "Got a job", "Lost a job", "Met someone", "Traveled", "Fell ill", "Improved skill", "Got educated"])
                 consequences = ""
                 if event == "Found money":
                     amount = random.uniform(50, 200)
@@ -229,6 +242,7 @@ class NPC:
                     consequences = f"Lost {amount:.2f} money"
                 elif event == "Got a job":
                     consequences = "Started a new job"
+                    self.skills['work'] += random.uniform(0, 5)  # Improve work skill
                 elif event == "Lost a job":
                     consequences = "Lost the job"
                 elif event == "Met someone":
@@ -240,6 +254,16 @@ class NPC:
                     new_country = random.choice(["USA", "China", "Russia", "Germany", "France"])
                     self.country = new_country
                     consequences = f"Traveled to {new_country}"
+                elif event == "Fell ill":
+                    self.health -= random.uniform(5, 15)  # Decrease health
+                    consequences = "Fell ill"
+                elif event == "Improved skill":
+                    skill = random.choice(["work", "social", "survival"])
+                    self.skills[skill] += random.uniform(1, 5)  # Improve a random skill
+                    consequences = f"Improved {skill} skill"
+                elif event == "Got educated":
+                    self.intelligence += random.uniform(1, 5)  # Increase intelligence
+                    consequences = "Gained education"
 
                 choice_quality = self.classify_choice(event)
                 self.log_event(event, consequences, choice_quality)
@@ -261,9 +285,10 @@ class NPC:
 
     def __str__(self):
         return (f"{self.name}, Age: {self.age:.2f}, Alive: {self.alive}, Money: {self.money:.2f}, "
-                f"Personality: {self.personality}, Country: {self.country}, State: {self.state}, "
+                f"Personality: {self.personality}, Health: {self.health:.2f}, Intelligence: {self.intelligence:.2f}, "
+                f"Skills: {self.skills}, Country: {self.country}, State: {self.state}, "
                 f"Stress Level: {self.stress_level:.2f}, Thoughts: {self.thoughts}, "
-                f"Self-Aware: {self.self_awareness}, Location: {self.state}, {self.country}, Time: {self.simulation_time()}")
+                f"Self-Aware: {self.self_awareness}, Mood: {self.mood}, Location: {self.state}, {self.country}, Time: {self.simulation_time()}")
 
 class State:
     def __init__(self, name):
