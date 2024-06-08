@@ -6,6 +6,9 @@ Packages Needed: os/random/sqlite3/time/matplotlib
 <br>Population Count Shown After Executing:</br>
 <img width="749" alt="MatplotLibPopulationCount" src="https://github.com/MrMime0x0/ProjectVeraMatrix/assets/136033068/59e6ec87-7078-4b78-b630-3e371befdaf9">
 
+<br>Death Count Shown After Executing:</br>
+<img width="750" alt="MatplotLibDeathCount" src="https://github.com/MrMime0x0/ProjectVeraMatrix/assets/136033068/6c837a6a-40d3-4ab2-a5f0-10b2cd634498">
+
 <br>What is ProjectVeraMatrix well its a script to recreate the Matrix or the Simulation in Python and it was made by ChatGPT and please be patient as it may have bugs in it. Also the picture may show you what is being written in the MatrixSim folder on the system.</br>
 
 <br>New things added: DeathRate logging/Complex NPC's/BirthRate Logging</br>
