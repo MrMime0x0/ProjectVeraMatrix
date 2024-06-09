@@ -11,4 +11,4 @@ Packages Needed: os/random/sqlite3/time/matplotlib
 
 <br>What is ProjectVeraMatrix well its a script to recreate the Matrix or the Simulation in Python and it was made by ChatGPT and please be patient as it may have bugs in it. Also the picture may show you what is being written in the MatrixSim folder on the system.</br>
 
-<br>New things added: DeathRate logging/Complex NPC's/BirthRate Logging</br>
+<br>New things added: DeathRate logging/Complex NPC's/BirthRate Logging/Economy Logging</br>
