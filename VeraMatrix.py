@@ -26,7 +26,7 @@ def create_directories():
     os.makedirs(os.path.join(usa_dir, "NewYorkData"), exist_ok=True)
     os.makedirs(os.path.join(china_dir, "BeijingData"), exist_ok=True)
     os.makedirs(os.path.join(china_dir, "ShanghaiData"), exist_ok=True)
-    os.makedirs(os.path.join(russia_dir, "MoscowData"), exist.ok=True)
+    os.makedirs(os.path.join(russia_dir, "MoscowData"), exist_ok=True)
     os.makedirs(os.path.join(russia_dir, "SaintPetersburgData"), exist_ok=True)
 
     # Ensure DeathRate directory exists
