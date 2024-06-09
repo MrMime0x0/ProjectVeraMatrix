@@ -26,15 +26,21 @@ def create_directories():
     os.makedirs(os.path.join(usa_dir, "NewYorkData"), exist_ok=True)
     os.makedirs(os.path.join(china_dir, "BeijingData"), exist_ok=True)
     os.makedirs(os.path.join(china_dir, "ShanghaiData"), exist_ok=True)
-    os.makedirs(os.path.join(russia_dir, "MoscowData"), exist_ok=True)
+    os.makedirs(os.path.join(russia_dir, "MoscowData"), exist.ok=True)
     os.makedirs(os.path.join(russia_dir, "SaintPetersburgData"), exist_ok=True)
 
     # Ensure DeathRate directory exists
     death_rate_dir = os.path.join(base_dir, "DeathRate")
     os.makedirs(death_rate_dir, exist_ok=True)
 
+    # Ensure BirthRate directory exists
     birth_rate_db = os.path.join(base_dir, "BirthRateData")
     os.makedirs(birth_rate_db, exist_ok=True)
+
+    # Ensure EconomyData directory exists
+    economy_data_dir = os.path.join(base_dir, "EconomyData")
+    os.makedirs(economy_data_dir, exist_ok=True)
+
 create_directories()
 
 # Create or connect to the birth rate database
@@ -69,6 +75,24 @@ def setup_death_rate_db():
     conn.close()
 
 setup_death_rate_db()
+
+# Setup EconomyData database
+def setup_economy_data_db():
+    economy_data_db = os.path.join(base_dir, "EconomyData", "EconomyDataLogs.sqlite")
+    conn = sqlite3.connect(economy_data_db)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS EconomyData (
+            year INTEGER,
+            total_money REAL,
+            average_money REAL,
+            economic_events TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+setup_economy_data_db()
 
 class NPC:
     def __init__(self, name, age, country, state):
@@ -332,6 +356,8 @@ class Universe:
         self.population_over_time = []  # Track population changes over time
         self.births_today = 0
         self.deaths_today = 0
+        self.total_money = 0
+        self.economic_events = []
 
     def add_planet(self, planet):
         self.planets.append(planet)
@@ -339,10 +365,12 @@ class Universe:
     def add_npc(self, npc):
         self.npcs.append(npc)
         self.population += 1
+        self.total_money += npc.money
 
     def remove_npc(self, npc):
         self.npcs.remove(npc)
         self.population -= 1
+        self.total_money -= npc.money
 
     def add_technology(self, tech):
         self.technologies.append(tech)
@@ -379,6 +407,18 @@ class Universe:
         conn.commit()
         conn.close()
 
+    def log_economy_data(self):
+        year = self.current_time.year
+        average_money = self.total_money / self.population if self.population > 0 else 0
+        economic_events = "; ".join(self.economic_events)
+        conn = sqlite3.connect(os.path.join(base_dir, "EconomyData", "EconomyDataLogs.sqlite"))
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO EconomyData (year, total_money, average_money, economic_events) VALUES (?, ?, ?, ?)',
+                       (year, self.total_money, average_money, economic_events))
+        conn.commit()
+        conn.close()
+        self.economic_events = []  # Reset the economic events list for the next day
+
     def run_simulation(self, days_to_simulate):
         end_time = self.current_time + timedelta(days=days_to_simulate)
         while self.current_time < end_time:
@@ -395,12 +435,15 @@ class Universe:
             self.population_over_time.append((self.current_time, self.population))  # Record population data
             self.log_birth_rate()  # Log the birth rate for the day
             self.log_death_rate()  # Log the death rate for the day
+            self.log_economy_data()  # Log the economy data for the day
             self.print_status()
             time.sleep(0.1)  # Sleep for 0.1 seconds to simulate real time passage (adjust or remove for faster runs)
 
     def print_status(self):
         print(f"\nSimulation Date: {self.current_time.strftime('%Y-%m-%d')} (Start Date: {self.start_date.strftime('%Y-%m-%d')})")
         print(f"Total Population: {self.population}")
+        print(f"Total Money in Economy: {self.total_money:.2f}")
+        print(f"Economic Events: {', '.join(self.economic_events)}")
         for planet in self.planets:
             print(f"Planet: {planet.name}")
             for country in planet.countries:
@@ -438,6 +481,25 @@ class Universe:
         plt.xlabel('Year')
         plt.ylabel('Deaths')
         plt.title('Death Rate Over Time')
+        plt.grid(True)
+        plt.show()
+
+    def plot_economy(self):
+        economy_data_db = os.path.join(base_dir, "EconomyData", "EconomyDataLogs.sqlite")
+        conn = sqlite3.connect(economy_data_db)
+        cursor = conn.cursor()
+        cursor.execute('SELECT year, total_money, average_money FROM EconomyData')
+        data = cursor.fetchall()
+        conn.close()
+
+        years, total_money, average_money = zip(*data)
+        plt.figure(figsize=(10, 5))
+        plt.plot(years, total_money, marker='o', color='b', label='Total Money')
+        plt.plot(years, average_money, marker='o', color='g', label='Average Money per NPC')
+        plt.xlabel('Year')
+        plt.ylabel('Money')
+        plt.title('Economy Over Time')
+        plt.legend()
         plt.grid(True)
         plt.show()
 
@@ -503,3 +565,5 @@ print("Simulation finished.")
 universe.plot_population()
 # Plot the death rate changes
 universe.plot_death_rate()
+# Plot the economy changes
+universe.plot_economy()
