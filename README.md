@@ -1,4 +1,4 @@
-Packages Needed: os/random/sqlite3/time/matplotlib
+Packages Needed: os/random/sqlite3/time/matplotlib/tkinter
 
 <br>File System Structure:</br>
 <img width="190" alt="MatrixSimFileStructure" src="https://github.com/MrMime0x0/ProjectVeraMatrix/assets/136033068/0bcc6cd0-e7f1-44b3-8110-74ada28a7bb9">
@@ -17,3 +17,6 @@ Packages Needed: os/random/sqlite3/time/matplotlib
 <br>New things added: DeathRate logging/Complex NPC's/BirthRate Logging/Economy Logging</br>
 
 <br>Now you can see the NPC Interaction through a dialog box of each NPC in the script that was generated and it shows their stats and other stuff.</br>
+
+<br>NPC Interaction dialog box after executing:</br>
+![NPCInteractionsBox](https://github.com/user-attachments/assets/4ce22a80-54c2-4651-b2e1-a9c1b6ed0591)
