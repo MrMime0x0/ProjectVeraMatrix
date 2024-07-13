@@ -4,6 +4,8 @@ import sqlite3
 import time
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
+import tkinter as tk
+from tkinter import messagebox
 
 # Ensure MatrixSim directory exists
 base_dir = "MatrixSim"
@@ -567,3 +569,36 @@ universe.plot_population()
 universe.plot_death_rate()
 # Plot the economy changes
 universe.plot_economy()
+
+# GUI to interact with NPCs
+class NPCApp:
+    def __init__(self, root, universe):
+        self.root = root
+        self.root.title("NPC Interaction")
+        self.universe = universe
+        
+        self.npc_listbox = tk.Listbox(root)
+        self.npc_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        self.detail_text = tk.Text(root)
+        self.detail_text.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        
+        self.npc_listbox.bind('<<ListboxSelect>>', self.show_npc_details)
+        
+        self.populate_npc_list()
+
+    def populate_npc_list(self):
+        for npc in self.universe.npcs:
+            self.npc_listbox.insert(tk.END, npc.name)
+
+    def show_npc_details(self, event):
+        selection = event.widget.curselection()
+        if selection:
+            index = selection[0]
+            npc = self.universe.npcs[index]
+            self.detail_text.delete('1.0', tk.END)
+            self.detail_text.insert(tk.END, str(npc))
+
+root = tk.Tk()
+app = NPCApp(root, universe)
+root.mainloop()
