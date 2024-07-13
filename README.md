@@ -16,4 +16,4 @@ Packages Needed: os/random/sqlite3/time/matplotlib
 
 <br>New things added: DeathRate logging/Complex NPC's/BirthRate Logging/Economy Logging</br>
 
-<br>Now you can see the NPC Interaction through a dialog box of each NPC in the script that was generated.</br>
+<br>Now you can see the NPC Interaction through a dialog box of each NPC in the script that was generated and it shows their stats and other stuff.</br>
