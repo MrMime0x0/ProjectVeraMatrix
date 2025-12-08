@@ -14,7 +14,7 @@ Packages Needed: os/random/sqlite3/time/matplotlib/tkinter
 
 <br>What is ProjectVeraMatrix well its a script to recreate the Matrix or the Simulation in Python and it was made by ChatGPT and please be patient as it may have bugs in it. Also the picture may show you what is being written in the MatrixSim folder on the system.</br>
 
-<br>This project name was formally known as VeraMatrix or ProjectVeraMatrix and soon its gonna be renamed to PlayerAgent sometime in the near future since i tend to find the name PlayerAgent to be a far simpler name - Also this project is considered finished meaning no more updated will be applied.</br>
+<br>This project name was formally known as VeraMatrix or ProjectVeraMatrix and soon its gonna be renamed to PlayerAgent sometime in the near future since i tend to find the name PlayerAgent to be a far simpler name - Also this project is considered finished meaning no more updates will be applied.</br>
 
 <br>New things added: DeathRate logging/Complex NPC's/BirthRate Logging/Economy Logging</br>
 
