@@ -22,3 +22,6 @@ Packages Needed: os/random/sqlite3/time/matplotlib/tkinter
 
 <br>NPC Interaction dialog box after executing:</br>
 ![NPCInteractionsBox](https://github.com/user-attachments/assets/4ce22a80-54c2-4651-b2e1-a9c1b6ed0591)
+
+#RecentUpdates
+<br>Renamed the project from VeraMatrix to PlayerAgent</br>
